@@ -1,0 +1,45 @@
+.crt-warp-container {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.crt-warp-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 75% 43%, rgba(199, 85, 247, 0.105), transparent 54%),
+    linear-gradient(180deg, rgba(18, 15, 23, 0.04), rgba(18, 15, 23, 0.22));
+}
+
+.crt-warp-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0.36;
+  pointer-events: none;
+}
+
+.crt-warp-container.is-fallback .crt-warp-canvas {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .crt-warp-canvas {
+    opacity: 0.28;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-warp-canvas {
+    opacity: 0.22;
+  }
+}

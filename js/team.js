@@ -1,0 +1,182 @@
+(() => {
+const contributions = {
+  artemi: {
+    name: "Artemi Baburin",
+    role: "Kujundaja / Designer",
+    contribution: "Vastutab projekti visuaalse suuna ja kasutajaliidese kujunduse eest. Hoiab tähelepanu selgel infostruktuuril, loetavusel ja sellel, et lahenduse eri vaated moodustaksid ühtse terviku.",
+  },
+  artjom: {
+    name: "Artjom Sokolov",
+    role: "Võimalusteotsija / Opportunity Seeker",
+    contribution: "Kaardistab võimalusi, kuidas tudengi digitaalset kogemust parandada. Aitab uurida erinevaid ideid ja leida lähtekohti, mida kontseptsiooni arendamisel edasi kaaluda.",
+  },
+  ott: {
+    name: "Ott Külaots",
+    role: "Meeskonnatöötaja / Teamworker",
+    contribution: "Toetab koostööd ja aitab siduda meeskonna erinevaid vaatenurki ühise projektisuunaga. Hoiab fookuses sujuva koostöö kasutajakeskse lahenduse loomisel.",
+  },
+  toomas: {
+    name: "Toomas Keba",
+    role: "Meeskonna juht / Team Lead · Viimistleja",
+    contribution: "Juhib meeskonna tööd ja aitab hoida projekti osad ühise eesmärgi suunas liikumas. Viimistlejana pöörab tähelepanu terviklikkusele ning lõpptulemuse selgusele.",
+  },
+  konstantin: {
+    name: "Konstantin Kubarski",
+    role: "Viimistleja / Finisher",
+    contribution: "Keskendub probleemide lahendamisele ning kontseptsiooni detailide lõpuni viimisele. Aitab hinnata, kas pakutud suund vastab kirjeldatud kasutajamuredele.",
+  },
+};
+
+const memberDialog = document.getElementById("member-dialog");
+const modalName = document.getElementById("member-modal-name");
+const modalRole = document.getElementById("member-modal-role");
+const modalContribution = document.getElementById("member-modal-contribution");
+const modalAvatar = document.getElementById("member-modal-avatar");
+const closeModal = memberDialog?.querySelector(".modal-close");
+const fallbackBackdrop = document.createElement("div");
+fallbackBackdrop.className = "member-dialog-backdrop";
+fallbackBackdrop.setAttribute("aria-hidden", "true");
+let lastMemberTrigger;
+let activeDialogMotion;
+let isClosing = false;
+const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+
+function animateDialog(keyframes, duration, easing) {
+  if (!memberDialog || reduceMotion || typeof memberDialog.animate !== "function") {
+    return Promise.resolve();
+  }
+  activeDialogMotion?.cancel();
+  const motion = memberDialog.animate(keyframes, {
+    duration,
+    easing,
+    fill: "both",
+  });
+  activeDialogMotion = motion;
+  return motion.finished.catch(() => {}).then(() => {
+    if (activeDialogMotion === motion) {
+      motion.cancel();
+      activeDialogMotion = null;
+    }
+  });
+}
+
+function openContribution(memberKey, trigger) {
+  const member = contributions[memberKey];
+  if (!member || !memberDialog || !modalName || !modalRole || !modalContribution) return;
+  isClosing = false;
+  memberDialog.classList.remove("is-closing");
+  lastMemberTrigger = trigger;
+  modalName.textContent = member.name;
+  modalRole.textContent = member.role;
+  modalContribution.textContent = member.contribution;
+  if (modalAvatar) {
+    modalAvatar.textContent = member.name.split(/\s+/).map((part) => part[0]).slice(0, 2).join("");
+  }
+  let openedNatively = false;
+  if (typeof memberDialog.showModal === "function") {
+    try {
+      memberDialog.showModal();
+      openedNatively = true;
+    } catch (error) {
+      openedNatively = memberDialog.matches?.(":modal") ?? false;
+    }
+  }
+  if (!openedNatively) {
+    // Escape transformed/stacked ancestors in browsers without a working top layer.
+    document.body.append(fallbackBackdrop, memberDialog);
+    memberDialog.classList.add("is-fallback");
+    memberDialog.setAttribute("open", "");
+    memberDialog.setAttribute("role", "dialog");
+    memberDialog.setAttribute("aria-modal", "true");
+    document.body.classList.add("member-modal-open");
+    fallbackBackdrop.classList.remove("is-closing");
+    fallbackBackdrop.classList.add("is-visible");
+  }
+  if (trigger && memberDialog.open) {
+    const triggerRect = trigger.getBoundingClientRect();
+    const dialogRect = memberDialog.getBoundingClientRect();
+    const originX = Math.min(90, Math.max(10, ((triggerRect.left + triggerRect.width / 2 - dialogRect.left) / dialogRect.width) * 100));
+    const originY = Math.min(90, Math.max(10, ((triggerRect.top + triggerRect.height / 2 - dialogRect.top) / dialogRect.height) * 100));
+    memberDialog.style.setProperty("--modal-origin", `${originX}% ${originY}%`);
+  }
+  animateDialog(
+    [
+      { opacity: 0, transform: "translateY(12px) scale(.965)" },
+      { opacity: 1, transform: "translateY(0) scale(1)" },
+    ],
+    360,
+    "cubic-bezier(.2,.8,.2,1)",
+  );
+  closeModal?.focus();
+}
+
+function closeContribution() {
+  if (!memberDialog || !memberDialog.open || isClosing) return;
+  isClosing = true;
+  memberDialog.classList.add("is-closing");
+  if (memberDialog.classList.contains("is-fallback")) fallbackBackdrop.classList.add("is-closing");
+  animateDialog(
+    [
+      { opacity: 1, transform: "translateY(0) scale(1)" },
+      { opacity: 0, transform: "translateY(7px) scale(.985)" },
+    ],
+    190,
+    "cubic-bezier(.4,0,1,1)",
+  ).then(() => {
+    if (!memberDialog.open) return;
+    if (typeof memberDialog.close === "function" && !memberDialog.classList.contains("is-fallback")) {
+      memberDialog.close();
+    } else {
+      memberDialog.removeAttribute("open");
+      memberDialog.removeAttribute("role");
+      memberDialog.removeAttribute("aria-modal");
+      memberDialog.classList.remove("is-fallback", "is-closing");
+      fallbackBackdrop.classList.remove("is-visible", "is-closing");
+      document.body.classList.remove("member-modal-open");
+      isClosing = false;
+      if (lastMemberTrigger?.isConnected) lastMemberTrigger.focus();
+    }
+  });
+}
+
+document.querySelectorAll(".member-card[data-member]").forEach((card) => {
+  card.addEventListener("click", (event) => {
+    event.preventDefault();
+    openContribution(card.dataset.member, card);
+  });
+  card.addEventListener("keydown", (event) => {
+    if (event.code === "Space") {
+      event.preventDefault();
+      openContribution(card.dataset.member, card);
+    }
+  });
+});
+
+closeModal?.addEventListener("click", closeContribution);
+fallbackBackdrop.addEventListener("click", closeContribution);
+memberDialog?.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeContribution();
+});
+memberDialog?.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && memberDialog.classList.contains("is-fallback")) {
+    event.preventDefault();
+    closeContribution();
+  }
+});
+memberDialog?.addEventListener("click", (event) => {
+  if (event.target === memberDialog) closeContribution();
+});
+memberDialog?.addEventListener("close", () => {
+  isClosing = false;
+  activeDialogMotion?.cancel();
+  activeDialogMotion = null;
+  memberDialog.classList.remove("is-closing", "is-fallback");
+  memberDialog.removeAttribute("role");
+  memberDialog.removeAttribute("aria-modal");
+  memberDialog.style.removeProperty("--modal-origin");
+  fallbackBackdrop.classList.remove("is-visible", "is-closing");
+  document.body.classList.remove("member-modal-open");
+  if (lastMemberTrigger?.isConnected) lastMemberTrigger.focus();
+});
+})();
