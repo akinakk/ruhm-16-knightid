@@ -105,7 +105,7 @@
   align-items: flex-start;
   justify-content: center;
   gap: 2px;
-  padding: 7px 12px;
+  padding: 7px 12px 7px 25px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -289,6 +289,16 @@
   box-shadow: none;
 }
 
+.planner-event:last-child .planner-event-rail::after {
+  content: "";
+  position: absolute;
+  top: 32px;
+  bottom: -3px;
+  left: 6px;
+  width: 1px;
+  background: linear-gradient(var(--course-accent), rgba(255, 255, 255, .1) 70%, transparent);
+}
+
 .planner-event-card {
   margin-bottom: 5px;
   padding: 11px 13px 10px;
@@ -444,6 +454,7 @@
   .planner-week-head { padding-right: 20px; padding-left: 20px; }
   .planner-overview { padding-right: 20px; padding-left: 20px; }
   .planner-days { padding: 0; }
+  .planner-day-button { padding-left: 20px; }
   .planner-content-grid { column-gap: 16px; padding-right: 16px; padding-left: 16px; }
   .planner-content-grid[data-courses-open="true"] .planner-day { grid-column: 1 / span 7; }
   .planner-content-grid[data-courses-open="true"] .planner-courses { grid-column: 8 / span 5; }
@@ -486,7 +497,7 @@
   .planner-days { padding: 0 0 3px; }
   .planner-days { min-height: 52px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
   .planner-days::-webkit-scrollbar { display: none; }
-  .planner-day-button { flex: 0 0 112px; min-height: 49px; padding: 6px 8px; }
+  .planner-day-button { flex: 0 0 112px; min-height: 49px; padding: 6px 8px 6px 14px; }
   .planner-day-name { font-size: 12px; }
   .planner-overview { min-height: 54px; gap: 4px; padding: 8px 14px 10px; }
   .planner-stat { min-height: 40px; gap: 4px; padding: 5px 8px; }
@@ -510,6 +521,7 @@
   .planner-event-rail { width: 9px; }
   .planner-event-rail::before { left: 2px; }
   .planner-event:not(:last-child) .planner-event-rail::after { left: 4px; }
+  .planner-event:last-child .planner-event-rail::after { left: 4px; }
   .planner-event-card { padding: 12px 10px; border-radius: 12px; }
   .planner-event-card h5 { font-size: 14px; }
   .planner-event-status { font-size: 9px; }
