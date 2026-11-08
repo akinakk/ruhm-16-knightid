@@ -80,9 +80,9 @@
           { opacity: 1, transform: "translateY(0)" },
         ],
         {
-          duration: 360,
+          duration: 260,
           delay: index * 38,
-          easing: "cubic-bezier(.16, 1, .3, 1)",
+          easing: "cubic-bezier(.23, 1, .32, 1)",
         },
       );
     });
@@ -298,7 +298,7 @@
       const nextHeight = eventsRoot.scrollHeight;
       timelineSizeAnimation = eventsRoot.animate(
         [{ height: `${previousHeight}px` }, { height: `${nextHeight}px` }],
-        { duration: 380, easing: "cubic-bezier(.22, 1, .36, 1)" },
+        { duration: 240, easing: "cubic-bezier(.23, 1, .32, 1)" },
       );
     }
     animateTimeline(shouldAnimate);

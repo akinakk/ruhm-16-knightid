@@ -70,7 +70,7 @@
       <section class="section planner" id="planner">
         <plasma-wave class="planner-plasma-wave" aria-hidden="true"></plasma-wave>
         <div class="container">
-          <div class="section-intro reveal"><div><span class="section-index">03 / PÄEVAPLAAN</span><h2>Terve päev.<br /><span>Ühe pilguga selge.</span></h2></div><p>See näidis kasutab sinu kalendrifaili päris tunde, aineid ja ruume. Vali päev, vaata vabu vahemikke ja proovi, kuidas aine valik sinu vaadet muudab.</p></div>
+          <div class="section-intro reveal"><div><span class="section-index">03 / PÄEVAPLAAN</span><h2>Terve päev.<br /><span>Ühe pilguga selge.</span></h2></div><p>Interaktiivne tunniplaani prototüüp koondab nädala õppeained, kellaajad ja ruumid ühte vaatesse. Päeva või õppeaine valimisel saab vaadata päevakava ja vabade ajavahemike muutumist.</p></div>
           <div class="planner-board reveal" id="planner-demo">
             <div class="planner-week-head"><div><span class="planner-overline">NÄIDISNÄDAL · 2026</span><h3 id="planner-date-title">Teisipäev, 10. november</h3></div><span class="planner-week-range">9.–13. november</span></div>
             <div class="planner-days" id="planner-days" role="group" aria-label="Vali nädalapäev"><span class="planner-day-indicator" id="planner-day-indicator" aria-hidden="true"></span></div>
@@ -79,7 +79,7 @@
               <section class="planner-day" aria-labelledby="planner-day-heading"><div class="planner-subhead"><div><span class="planner-overline">SINU AJAKAVA</span><h4 id="planner-day-heading">Päeva ajajoon</h4></div><div class="planner-day-actions"><span class="planner-events-count" id="planner-events-count"></span><button class="planner-courses-toggle" id="planner-courses-toggle" type="button" aria-expanded="false" aria-controls="planner-courses"><span>Minu valik</span><span class="planner-selected-count" id="planner-selected-count" aria-live="polite"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg></button></div></div><div class="planner-events" id="planner-events" aria-live="polite"></div></section>
               <aside class="planner-courses" id="planner-courses" aria-labelledby="planner-courses-heading" aria-hidden="true" inert><div class="planner-subhead"><div><span class="planner-overline">NÄIDISE VALIK</span><h4 id="planner-courses-heading">Õppeained</h4></div></div><div class="planner-filter" role="group" aria-label="Filtreeri õppeaineid"><button type="button" data-course-filter="all" aria-pressed="true">Kõik</button><button type="button" data-course-filter="selected" aria-pressed="false">Valitud</button><button type="button" data-course-filter="unselected" aria-pressed="false">Valimata</button></div><div class="planner-course-list" id="planner-course-list"></div><p class="planner-selection-note">Lülita aineid sisse või välja — ajajoon uueneb kohe.</p></aside>
             </div>
-            <footer class="planner-disclaimer"><span aria-hidden="true">ⓘ</span><p>Tunniandmed pärinevad sinu .ics-ekspordist. Fail ei sisalda ÕIS-i registreeringute staatust; ainevalik on siin muudetav prototüübi näidis.</p></footer>
+            <footer class="planner-disclaimer"><span aria-hidden="true">ⓘ</span><p>Tunniplaani näidis põhineb kalendri .ics-ekspordi andmetel. Õppeainete sisse- ja väljalülitamine illustreerib vaate muutumist ega kajasta ÕIS-i registreeringuid.</p></footer>
           </div>
         </div>
       </section>
@@ -114,13 +114,12 @@
         <div class="container">
             <div class="section-intro reveal">
             <div><span class="section-index">05 / MEESKOND</span><h2>Rühm 16.<br /><span>Kõik ühe eesmärgi nimel.</span></h2></div>
-            <div class="motto-card"><span>MEIE MOTO</span><b>Jõudu tulevikku<span> ✦</span></b></div>
           </div>
           <div class="team-layout">
             <div class="team-list" aria-label="Rühm 16 liikmed">
               <a href="#team" class="member-card reveal" data-member="artemi" aria-label="Ava Artemi Baburini panuse dokument" role="button"><span class="member-avatar avatar-one" aria-hidden="true">AB</span><div class="member-info"><span class="member-role">KÜSIMUSTIK · VISUAALNE KUJUNDUS</span><h3>Artemi Baburin</h3><p>Veebileht, raport ja esitlus</p></div><span class="member-open" aria-hidden="true">Panus <span>↗</span></span></a>
               <a href="#team" class="member-card reveal" data-member="artjom" aria-label="Ava Artjom Sokolovi panuse dokument" role="button"><span class="member-avatar avatar-two" aria-hidden="true">AS</span><div class="member-info"><span class="member-role">VASTUSTE KOGUMINE · KIRJANDUS</span><h3>Artjom Sokolov</h3><p>Tagasiside, viited ja sõnastik</p></div><span class="member-open" aria-hidden="true">Panus <span>↗</span></span></a>
-              <a href="#team" class="member-card reveal" data-member="ott" aria-label="Ava Ott Külaotsa panuse dokument" role="button"><span class="member-avatar avatar-three" aria-hidden="true">OK</span><div class="member-info"><span class="member-role">MEESKONNATÖÖTAJA · TEAMWORKER</span><h3>Ott Külaots</h3><p>Koostöö ja ühise suuna hoidmine</p></div><span class="member-open" aria-hidden="true">Panus <span>↗</span></span></a>
+              <a href="#team" class="member-card reveal" data-member="ott" aria-label="Ava Ott Külaotsa panuse dokument" role="button"><span class="member-avatar avatar-three" aria-hidden="true">OK</span><div class="member-info"><span class="member-role">PLANEERIMINE · SISU · TAGASISIDE</span><h3>Ott Külaots</h3><p>Ühine plaan ja töö ülevaatus</p></div><span class="member-open" aria-hidden="true">Panus <span>↗</span></span></a>
               <a href="#team" class="member-card reveal" data-member="toomas" aria-label="Ava Toomas Keba panuse dokument" role="button"><span class="member-avatar avatar-four" aria-hidden="true">TK</span><div class="member-info"><span class="member-role">SISSEJUHATUS · METOODIKA</span><h3>Toomas Keba</h3><p>Tiitelleht, tegevuskava ja etapid</p></div><span class="member-open" aria-hidden="true">Panus <span>↗</span></span></a>
               <a href="#team" class="member-card reveal" data-member="konstantin" aria-label="Ava Konstantin Kubarski panuse dokument" role="button"><span class="member-avatar avatar-five" aria-hidden="true">KK</span><div class="member-info"><span class="member-role">PERSOONAD · EMPIIRILINE UURING</span><h3>Konstantin Kubarski</h3><p>Väärtuspakkumine ja pilootimine</p></div><span class="member-open" aria-hidden="true">Panus <span>↗</span></span></a>
             </div>

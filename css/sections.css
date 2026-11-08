@@ -361,15 +361,15 @@ body.member-modal-open{overflow:hidden}
 }
 .card-icon svg,.chart-icon svg,.summary-icon svg,.proof-icon svg{filter:none}
 
-/* Inset active marker so it reads as a tab indicator, not a full-width rule. */
+/* Full-width active marker sits flush with each tab edge. */
 .survey-tab::after{
   content:"";
   position:absolute;
-  left:18px;
-  right:18px;
+  left:0;
+  right:0;
   bottom:0;
   height:2px;
-  border-radius:999px;
+  border-radius:0;
   background:linear-gradient(90deg,#9275dd,#5d9eae);
   box-shadow:none;
   opacity:0;
@@ -378,11 +378,11 @@ body.member-modal-open{overflow:hidden}
   transition:opacity .2s,transform .28s cubic-bezier(.23,1,.32,1);
 }
 .survey-tab.active::after{
-  left:18px;
-  right:18px;
+  left:0;
+  right:0;
   bottom:0;
   height:2px;
-  border-radius:999px;
+  border-radius:0;
   background:linear-gradient(90deg,#9275dd,#5d9eae);
   box-shadow:none;
   opacity:1;
@@ -394,7 +394,7 @@ body.member-modal-open{overflow:hidden}
   .skeleton-card{gap:11px;padding:15px;border-radius:16px}
   .skeleton-chart{height:72px}
   .skeleton-chart.short{height:54px}
-  .survey-tab::after{left:12px;right:12px}
+  .survey-tab::after{left:0;right:0}
 }
 @media(prefers-reduced-motion:reduce){
   .panel-skeleton,.skeleton-line{transition:none;animation:none}

@@ -12,8 +12,8 @@ const contributions = {
   },
   ott: {
     name: "Ott Külaots",
-    role: "Meeskonnatöötaja / Teamworker",
-    contribution: "Toetab koostööd ja aitab siduda meeskonna erinevaid vaatenurki ühise projektisuunaga. Hoiab fookuses sujuva koostöö kasutajakeskse lahenduse loomisel.",
+    role: "Planeerimine, sisu ja tagasiside",
+    contribution: "Panustab üldisesse planeerimisse ning arutab meeskonnaga, mida ja kuidas teha. Tegeleb sisuga: viited, materjalide analüüs, tekstilõigud ja sõnastik. Vaatab meeskonna ühise töö kiirelt üle ning annab tagasisidet selle parandamiseks ja arendamiseks.",
   },
   toomas: {
     name: "Toomas Keba",
