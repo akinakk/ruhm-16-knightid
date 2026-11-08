@@ -32,6 +32,7 @@ const dockSections = dockItems.map((item) => item.section);
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let dockFrame = 0;
 let dockPositions = [];
+let lastDockActiveIndex = -1;
 
 function measureDock() {
   if (!dock || !indicator || !dockLinks.length) return;
@@ -90,6 +91,18 @@ function updateDock() {
     link.classList.toggle("is-current", active);
     if (active) link.setAttribute("aria-current", "location");
     else link.removeAttribute("aria-current");
+
+    if (active && activeIndex !== lastDockActiveIndex) {
+      lastDockActiveIndex = activeIndex;
+      const dockRect = dock.getBoundingClientRect();
+      const linkRect = link.getBoundingClientRect();
+      const innerLeft = dockRect.left + dock.clientLeft;
+      const innerRight = innerLeft + dock.clientWidth;
+      if (linkRect.left < innerLeft || linkRect.right > innerRight) {
+        const target = link.offsetLeft - (dock.clientWidth - link.offsetWidth) / 2;
+        dock.scrollTo({ left: target, behavior: reducedMotion.matches ? "auto" : "smooth" });
+      }
+    }
   });
 }
 
@@ -105,6 +118,7 @@ if (dock && indicator && dockSections.length) {
   measureDock();
   window.addEventListener("scroll", requestDockUpdate, { passive: true });
   window.addEventListener("resize", measureDock);
+  dock.addEventListener("scroll", measureDock, { passive: true });
   window.addEventListener("load", measureDock, { once: true });
   document.fonts?.ready.then(measureDock);
   reducedMotion.addEventListener?.("change", requestDockUpdate);

@@ -2,13 +2,13 @@
 const contributions = {
   artemi: {
     name: "Artemi Baburin",
-    role: "Kujundaja / Designer",
-    contribution: "Vastutab projekti visuaalse suuna ja kasutajaliidese kujunduse eest. Hoiab tähelepanu selgel infostruktuuril, loetavusel ja sellel, et lahenduse eri vaated moodustaksid ühtse terviku.",
+    role: "Küsimustik ja visuaalne kujundus",
+    contribution: "Koostab küsimustiku ja viib selle õpilaste seas läbi. Loob Rühm 16 veebilehe ja kujunduse ning vormistab visuaalselt lõppraporti ja esitluse.",
   },
   artjom: {
     name: "Artjom Sokolov",
-    role: "Võimalusteotsija / Opportunity Seeker",
-    contribution: "Kaardistab võimalusi, kuidas tudengi digitaalset kogemust parandada. Aitab uurida erinevaid ideid ja leida lähtekohti, mida kontseptsiooni arendamisel edasi kaaluda.",
+    role: "Vastuste kogumine ja kirjanduse ülevaade",
+    contribution: "Levitab ankeeti ja kogub vastuseid, haldab isiklikku suhtlust ning tagasisidet. Otsib teadusartikleid, vormistab kirjandusviited ja koostab mõistete sõnastiku. Annab ülevaate lõplikust lahendusest (6. punkt).",
   },
   ott: {
     name: "Ott Külaots",
@@ -17,13 +17,13 @@ const contributions = {
   },
   toomas: {
     name: "Toomas Keba",
-    role: "Meeskonna juht / Team Lead · Viimistleja",
-    contribution: "Juhib meeskonna tööd ja aitab hoida projekti osad ühise eesmärgi suunas liikumas. Viimistlejana pöörab tähelepanu terviklikkusele ning lõpptulemuse selgusele.",
+    role: "Sissejuhatus ja metoodika",
+    contribution: "Koostab tiitellehe ja sissejuhatuse (1. punkt). Kirjeldab projekti tegevuskava, etappe ja metoodikat (3. punkt).",
   },
   konstantin: {
     name: "Konstantin Kubarski",
-    role: "Viimistleja / Finisher",
-    contribution: "Keskendub probleemide lahendamisele ning kontseptsiooni detailide lõpuni viimisele. Aitab hinnata, kas pakutud suund vastab kirjeldatud kasutajamuredele.",
+    role: "Persoonad ja empiiriline uurimine",
+    contribution: "Koostab persoonad ja väärtuspakkumise (4. punkt), viib läbi pilootimise ning esitab empiirilise uurimise tulemused (5. punkt).",
   },
 };
 

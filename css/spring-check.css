@@ -1,0 +1,90 @@
+spring-check.planner-spring-check {
+  position: relative;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  place-items: center;
+}
+
+.planner-spring-check .spring-check-input {
+  position: relative;
+  display: grid;
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  appearance: none;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .025);
+  color: #111219;
+  cursor: pointer;
+  transition: border-color 180ms cubic-bezier(.23, 1, .32, 1), background-color 180ms cubic-bezier(.23, 1, .32, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.planner-spring-check .spring-check-input::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #c4b4ff;
+  content: "";
+  opacity: 0;
+  transform: scale(var(--spring-check-scale, 0));
+  transition: opacity 120ms cubic-bezier(.23, 1, .32, 1);
+}
+
+.planner-spring-check .spring-check-input::after {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 4px;
+  height: 7px;
+  border-right: 1.7px solid #111219;
+  border-bottom: 1.7px solid #111219;
+  border-left: 0;
+  content: "";
+  opacity: 0;
+  transform: rotate(45deg) scale(.4);
+  transition: opacity 100ms cubic-bezier(.23, 1, .32, 1), transform 210ms cubic-bezier(.23, 1, .32, 1);
+}
+
+.planner-spring-check.is-checked .spring-check-input {
+  border-color: #c4b4ff;
+  background: #c4b4ff;
+}
+
+.planner-spring-check.is-checked .spring-check-input::before {
+  opacity: 1;
+}
+
+.planner-spring-check.is-checked .spring-check-input::after {
+  opacity: 1;
+  transform: rotate(45deg) scale(1);
+  transition-delay: 70ms;
+}
+
+.planner-spring-check .spring-check-input:hover {
+  border-color: #ded4ff;
+}
+
+.planner-spring-check .spring-check-input:focus-visible {
+  outline: 2px solid #c4b4ff;
+  outline-offset: 4px;
+}
+
+.planner-spring-check.is-keyboard-change .spring-check-input,
+.planner-spring-check.is-keyboard-change .spring-check-input::before,
+.planner-spring-check.is-keyboard-change .spring-check-input::after {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planner-spring-check .spring-check-input,
+  .planner-spring-check .spring-check-input::before,
+  .planner-spring-check .spring-check-input::after {
+    transition: none;
+  }
+}

@@ -45,12 +45,14 @@ if (proofAside && scoreCounter) {
   if ("IntersectionObserver" in window) {
     const scoreObserver = new IntersectionObserver((entries, observer) => {
       if (entries.some((entry) => entry.isIntersecting)) {
+        proofAside.classList.add("is-visible");
         animateScore();
         observer.disconnect();
       }
     }, { threshold: 0.3 });
     scoreObserver.observe(proofAside);
   } else {
+    proofAside.classList.add("is-visible");
     animateScore();
   }
 }
