@@ -1,0 +1,26 @@
+count-up {
+  display: inline-block;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+count-up[hidden] {
+  display: none;
+}
+
+.count-up__visual {
+  display: inline-block;
+  min-width: 1ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.count-up__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}

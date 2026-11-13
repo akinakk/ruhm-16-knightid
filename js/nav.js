@@ -22,6 +22,34 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+const surveyRouteHashes = new Set(["#tools-chart", "#schedule-chart", "#channels-chart"]);
+const sectionHeader = document.querySelector(".site-header");
+const scrollMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+function navigateToFragment(hash, updateHistory = true) {
+  if (!hash || surveyRouteHashes.has(hash)) return false;
+  const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+  if (!target) return false;
+  if (updateHistory) {
+    const url = `${window.location.pathname}${window.location.search}${hash}`;
+    if (window.location.hash === hash) window.history.replaceState(null, "", url);
+    else window.history.pushState(null, "", url);
+  }
+  const headerHeight = sectionHeader?.getBoundingClientRect().height || 0;
+  const targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
+  window.scrollTo({ top: Math.max(0, targetTop), behavior: scrollMotionPreference.matches ? "auto" : "smooth" });
+  return true;
+}
+
+document.querySelectorAll('a[href^="#"]:not([data-survey-link])').forEach((link) => {
+  link.addEventListener("click", (event) => {
+    if (navigateToFragment(link.getAttribute("href"))) event.preventDefault();
+  });
+});
+
+window.addEventListener("hashchange", () => navigateToFragment(window.location.hash, false));
+window.addEventListener("load", () => navigateToFragment(window.location.hash, false), { once: true });
+
 const dock = document.querySelector(".floating-dock");
 const indicator = dock?.querySelector(".dock-indicator");
 const dockItems = [...(dock?.querySelectorAll("a[data-dock-index]") || [])]

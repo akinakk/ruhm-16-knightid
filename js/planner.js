@@ -59,32 +59,58 @@
   const overview = document.getElementById("planner-overview");
   const eventsRoot = document.getElementById("planner-events");
   const eventsCount = document.getElementById("planner-events-count");
+  const dayContent = document.getElementById("planner-day-content");
   const contentGrid = document.getElementById("planner-content-grid");
   const coursesToggle = document.getElementById("planner-courses-toggle");
   const coursesPanel = document.getElementById("planner-courses");
   const coursesRoot = document.getElementById("planner-course-list");
   const selectedCount = document.getElementById("planner-selected-count");
   const filterButtons = [...board.querySelectorAll("[data-course-filter]")];
+  const eventCountValue = document.createElement("count-up");
+  eventCountValue.format = "integer";
+  const eventCountLabel = document.createElement("span");
+  eventsCount.replaceChildren(eventCountValue, eventCountLabel);
+  const selectedCountValue = document.createElement("count-up");
+  selectedCountValue.format = "integer";
+  selectedCountValue.setAttribute("suffix", `/${courseList.length}`);
+  selectedCount.replaceChildren(selectedCountValue);
   let activeDay = 1;
   let activeFilter = "all";
-  let timelineSizeAnimation;
+  let timelineItemAnimations = [];
+  let lastRenderedDayKey;
   const motionPreference = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+
+  function cancelTimelineMotion() {
+    timelineItemAnimations.forEach((animation) => animation.cancel());
+    timelineItemAnimations = [];
+  }
 
   function animateTimeline(shouldAnimate) {
     if (!shouldAnimate || motionPreference?.matches) return;
-    const items = [...eventsRoot.querySelectorAll(".planner-event")];
+    const items = [...eventsRoot.children].filter((item) => !item.classList.contains("planner-events-exit-layer"));
     items.forEach((item, index) => {
-      item.animate(
+      const key = item.dataset.eventKey || item.dataset.gapKey || item.dataset.timelineKey;
+      const oldRect = key ? item._plannerOldRect : undefined;
+      const rect = item.getBoundingClientRect();
+      const transform = oldRect
+        ? `translate(${(oldRect.left - rect.left).toFixed(1)}px, ${(oldRect.top - rect.top).toFixed(1)}px)`
+        : "translateY(7px) scale(.99)";
+      const animation = item.animate(
         [
-          { opacity: 0, transform: "translateY(7px)" },
+          { opacity: 0, transform },
           { opacity: 1, transform: "translateY(0)" },
         ],
         {
-          duration: 260,
-          delay: index * 38,
+          duration: oldRect ? 270 : 230,
+          delay: Math.min(index * 24, 72),
           easing: "cubic-bezier(.23, 1, .32, 1)",
         },
       );
+      delete item._plannerOldRect;
+      timelineItemAnimations.push(animation);
+      animation.finished.catch(() => {}).then(() => {
+        timelineItemAnimations = timelineItemAnimations.filter((itemAnimation) => itemAnimation !== animation);
+      });
     });
   }
 
@@ -185,47 +211,60 @@
     });
   }
 
-  function makeOverview(day) {
-    const teachingMinutes = day.events.reduce((sum, event) => sum + minutes(event.end) - minutes(event.start), 0);
+  function makeOverview(events) {
+    const teachingMinutes = events.reduce((sum, event) => sum + minutes(event.end) - minutes(event.start), 0);
     let freeMinutes = 0;
-    for (let index = 1; index < day.events.length; index += 1) {
-      freeMinutes += Math.max(0, minutes(day.events[index].start) - minutes(day.events[index - 1].end));
+    for (let index = 1; index < events.length; index += 1) {
+      freeMinutes += Math.max(0, minutes(events[index].start) - minutes(events[index - 1].end));
     }
     const stats = [
-      { value: String(day.events.length), label: day.events.length === 1 ? "tund" : "tundi", accent: "violet" },
-      { value: durationLabel(teachingMinutes), label: "õppetööd", accent: "blue" },
-      { value: durationLabel(freeMinutes), label: "vaba aeg tundide vahel", accent: "neutral" },
+      { value: events.length, format: "integer", label: events.length === 1 ? "tund" : "tundi", accent: "violet" },
+      { value: teachingMinutes, format: "duration", label: "õppetööd", accent: "blue" },
+      { value: freeMinutes, format: "duration", label: "vaba aeg tundide vahel", accent: "neutral" },
     ];
-    overview.replaceChildren();
-    stats.forEach((stat) => {
-      const item = document.createElement("div");
-      item.className = `planner-stat planner-stat-${stat.accent}`;
-      const value = document.createElement("b");
-      value.textContent = stat.value;
-      const label = document.createElement("span");
-      label.textContent = stat.label;
-      item.append(value, label);
-      overview.append(item);
+    stats.forEach((stat, index) => {
+      let item = overview.children[index];
+      if (!item) {
+        item = document.createElement("div");
+        item.className = `planner-stat planner-stat-${stat.accent}`;
+        const value = document.createElement("b");
+        const counter = document.createElement("count-up");
+        const label = document.createElement("span");
+        label.className = "planner-stat-label";
+        value.append(counter);
+        item.append(value, label);
+        overview.append(item);
+      }
+      const counter = item.querySelector("count-up");
+      counter.format = stat.format;
+      counter.value = stat.value;
+      item.querySelector(".planner-stat-label").textContent = stat.label;
     });
   }
 
-  function makeGap(previousEvent, event) {
+  function makeGap(previousEvent, event, fromMinutes = 0) {
+    const gapMinutes = Math.max(0, minutes(event.start) - minutes(previousEvent.end));
     const gap = document.createElement("div");
     gap.className = "planner-gap";
-    gap.setAttribute("aria-label", `${durationLabel(minutes(event.start) - minutes(previousEvent.end))} vaba aega`);
+    gap.dataset.gapKey = `${previousEvent.code}-${previousEvent.start}__${event.code}-${event.start}`;
+    gap.setAttribute("aria-label", `${durationLabel(gapMinutes)} vaba aega`);
     const line = document.createElement("span");
     line.className = "planner-gap-line";
     const label = document.createElement("span");
     label.className = "planner-gap-label";
-    label.textContent = `${durationLabel(minutes(event.start) - minutes(previousEvent.end))} vaba aeg`;
+    const counter = document.createElement("count-up");
+    counter.format = "duration";
+    counter.setAttribute("from", String(Math.max(0, fromMinutes)));
+    counter.value = gapMinutes;
+    label.append(counter, document.createTextNode(" vaba aeg"));
     gap.append(line, label);
     return gap;
   }
 
   function makeEvent(event) {
-    const isSelected = selected[event.code];
     const article = document.createElement("article");
-    article.className = `planner-event${isSelected ? "" : " is-unselected"}`;
+    article.className = "planner-event";
+    article.dataset.eventKey = `${event.code}-${event.start}`;
     article.dataset.courseCode = event.code;
     article.style.setProperty("--course-accent", colors[courseList.findIndex((course) => course.code === event.code) % colors.length]);
 
@@ -248,11 +287,7 @@
     const code = document.createElement("span");
     code.className = "planner-course-code";
     code.textContent = event.code;
-    const status = document.createElement("span");
-    status.className = `planner-event-status${isSelected ? " is-status-hidden" : ""}`;
-    status.textContent = "VÄLJAS";
-    status.setAttribute("aria-hidden", String(isSelected));
-    header.append(code, status);
+    header.append(code);
     const title = document.createElement("h5");
     title.textContent = event.title;
     const room = document.createElement("p");
@@ -276,32 +311,85 @@
   }
 
   function renderEvents(day, shouldAnimate = false) {
-    const previousHeight = eventsRoot.getBoundingClientRect().height;
-    timelineSizeAnimation?.cancel();
-    timelineSizeAnimation = null;
-    eventsRoot.replaceChildren();
-    if (!day.events.length) {
-      const empty = document.createElement("div");
-      empty.className = "planner-empty";
-      empty.textContent = "Sellel päeval pole kalendris tunde. Võta aega endale.";
-      eventsRoot.append(empty);
-      eventsCount.textContent = "VABA PÄEV";
-    } else {
-      day.events.forEach((event, index) => {
-        if (index > 0) eventsRoot.append(makeGap(day.events[index - 1], event));
-        eventsRoot.append(makeEvent(event));
-      });
-      eventsCount.textContent = `${day.events.length} ${day.events.length === 1 ? "TUND" : "TUNDI"}`;
+    const visibleEvents = day.events.filter((event) => selected[event.code]);
+    const currentEventKeys = [...eventsRoot.children]
+      .filter((item) => item.classList.contains("planner-event"))
+      .map((item) => item.dataset.eventKey);
+    const nextEventKeys = visibleEvents.map((event) => `${event.code}-${event.start}`);
+    if (lastRenderedDayKey === day.key && currentEventKeys.length === nextEventKeys.length
+      && currentEventKeys.every((key, index) => key === nextEventKeys[index])) {
+      updateEventsCount(day, visibleEvents.length);
+      return visibleEvents;
     }
 
-    if (shouldAnimate && !motionPreference?.matches) {
-      const nextHeight = eventsRoot.scrollHeight;
-      timelineSizeAnimation = eventsRoot.animate(
-        [{ height: `${previousHeight}px` }, { height: `${nextHeight}px` }],
-        { duration: 240, easing: "cubic-bezier(.23, 1, .32, 1)" },
-      );
+    const directChildren = [...eventsRoot.children].filter((item) => !item.classList.contains("planner-events-exit-layer"));
+    const previousPositions = new Map();
+    const previousGaps = new Map();
+    const remember = (item, parentOpacity = 1, track = true) => {
+      const rect = item.getBoundingClientRect();
+      if (!track) return;
+      if (item.dataset.eventKey) previousPositions.set(item.dataset.eventKey, rect);
+      if (item.dataset.gapKey) {
+        const count = item.querySelector("count-up");
+        previousPositions.set(item.dataset.gapKey, rect);
+        previousGaps.set(item.dataset.gapKey, count?.presentationValue ?? count?.value ?? 0);
+      }
+      if (item.dataset.timelineKey) previousPositions.set(item.dataset.timelineKey, rect);
+    };
+    directChildren.forEach((item) => remember(item));
+    cancelTimelineMotion();
+
+    eventsRoot.replaceChildren();
+    if (!visibleEvents.length) {
+      const empty = document.createElement("div");
+      empty.className = "planner-empty";
+      empty.dataset.timelineKey = "empty";
+      empty.textContent = day.events.length
+        ? "Selle päeva õppeained on valikust eemaldatud."
+        : "Sellel päeval pole kalendris tunde. Võta aega endale.";
+      eventsRoot.append(empty);
+    } else {
+      visibleEvents.forEach((event, index) => {
+        if (index > 0) {
+          const previousEvent = visibleEvents[index - 1];
+          const gapKey = `${previousEvent.code}-${previousEvent.start}__${event.code}-${event.start}`;
+          eventsRoot.append(makeGap(previousEvent, event, previousGaps.get(gapKey) || 0));
+        }
+        const article = makeEvent(event);
+        article._plannerOldRect = previousPositions.get(article.dataset.eventKey);
+        eventsRoot.append(article);
+      });
     }
+    if (!visibleEvents.length) {
+      const empty = eventsRoot.querySelector(".planner-empty");
+      empty._plannerOldRect = previousPositions.get("empty");
+    }
+    [...eventsRoot.querySelectorAll(".planner-gap")].forEach((gap) => {
+      gap._plannerOldRect = previousPositions.get(gap.dataset.gapKey);
+    });
+    updateEventsCount(day, visibleEvents.length);
+    lastRenderedDayKey = day.key;
+
     animateTimeline(shouldAnimate);
+    return visibleEvents;
+  }
+
+  function updateEventsCount(day, eventTotal) {
+    if (!day.events.length) {
+      eventCountValue.hidden = true;
+      eventCountLabel.textContent = "VABA PÄEV";
+      eventsCount.setAttribute("aria-label", "Vaba päev");
+      return;
+    }
+    eventCountValue.hidden = false;
+    eventCountValue.value = eventTotal;
+    eventCountLabel.textContent = eventTotal === 1 ? " TUND" : " TUNDI";
+    eventsCount.setAttribute("aria-label", `${eventTotal} ${eventTotal === 1 ? "tund" : "tundi"}`);
+  }
+
+  function updateSelectedCount() {
+    const selectedTotal = courseList.filter((course) => selected[course.code]).length;
+    selectedCountValue.value = selectedTotal;
   }
 
   function renderCourses() {
@@ -310,8 +398,7 @@
       if (activeFilter === "unselected") return !selected[course.code];
       return true;
     });
-    const selectedTotal = courseList.filter((course) => selected[course.code]).length;
-    selectedCount.textContent = `${selectedTotal}/${courseList.length}`;
+    updateSelectedCount();
     coursesRoot.replaceChildren();
 
     if (!visibleCourses.length) {
@@ -350,16 +437,10 @@
         label.classList.toggle("is-selected", checkbox.checked);
         checkbox.setAttribute("aria-label", `${course.title}: ${checkbox.checked ? "valitud" : "pole valitud"}`);
         state.textContent = checkbox.checked ? "Valitud" : "Pole valitud";
-        const totalSelected = courseList.filter((item) => selected[item.code]).length;
-        selectedCount.textContent = `${totalSelected}/${courseList.length}`;
-        eventsRoot.querySelectorAll(`[data-course-code="${course.code}"]`).forEach((eventItem) => {
-          eventItem.classList.toggle("is-unselected", !checkbox.checked);
-          const status = eventItem.querySelector(".planner-event-status");
-          if (status) {
-            status.classList.toggle("is-status-hidden", checkbox.checked);
-            status.setAttribute("aria-hidden", String(checkbox.checked));
-          }
-        });
+        updateSelectedCount();
+        const shouldAnimateTimeline = !springCheck.classList.contains("is-keyboard-change");
+        const visibleEvents = renderEvents(days[activeDay], shouldAnimateTimeline);
+        makeOverview(visibleEvents);
 
         const filterRemovesCourse = (activeFilter === "selected" && !checkbox.checked)
           || (activeFilter === "unselected" && checkbox.checked);
@@ -388,8 +469,15 @@
     });
     moveDayIndicator(activeDay, shouldAnimate && dayChanged);
     dateTitle.textContent = `${day.weekday}, ${day.date}`;
-    renderEvents(day, shouldAnimate && dayChanged);
-    makeOverview(day);
+    if (dayContent) {
+      dayContent.dataset.dayKey = day.key;
+      dayContent.classList.remove("is-changing");
+      if (shouldAnimate && dayChanged && !motionPreference?.matches) {
+        requestAnimationFrame(() => dayContent.classList.add("is-changing"));
+      }
+    }
+    const visibleEvents = renderEvents(day, shouldAnimate && dayChanged);
+    makeOverview(visibleEvents);
   }
 
   filterButtons.forEach((button) => {

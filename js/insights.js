@@ -81,8 +81,9 @@ function makeDonut() {
     path.setAttribute("fill", `url(#tool-gradient-${index})`);
     path.setAttribute("class", "donut-segment");
     path.setAttribute("tabindex", "0");
-    path.setAttribute("role", "img");
-    path.setAttribute("aria-label", `${item.label}: ${describeCount(item.value, total)}`);
+    path.setAttribute("role", "button");
+    path.setAttribute("aria-pressed", "true");
+    path.setAttribute("aria-label", `Peida ${item.label}, ${item.value} vastust`);
     path.dataset.index = String(index);
     path.dataset.label = item.label;
     path.dataset.value = String(item.value);
@@ -91,14 +92,21 @@ function makeDonut() {
     path.addEventListener("pointerleave", hideTooltip);
     path.addEventListener("focus", showTooltip);
     path.addEventListener("blur", hideTooltip);
+    path.addEventListener("click", () => toggleCategory(index, path));
+    path.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      path.click();
+    });
     donut.append(path);
     startAngle = endAngle;
 
     const button = document.createElement("button");
     button.type = "button";
     button.className = "legend-item";
-    button.setAttribute("aria-pressed", "false");
-    button.setAttribute("aria-label", `${item.label}: ${item.value} valikut. Vajuta kategooria peitmiseks või näitamiseks.`);
+    button.setAttribute("aria-pressed", "true");
+    button.setAttribute("aria-label", `Peida ${item.label}, ${item.value} vastust`);
+    button.dataset.index = String(index);
     button.innerHTML = `<span class="legend-swatch" style="background:${item.color};color:${item.color}"></span><span>${item.label}</span><b>${item.value}</b>`;
     button.addEventListener("click", () => toggleCategory(index, button));
     legend.append(button);
@@ -121,13 +129,16 @@ function hideTooltip() {
   tooltip?.classList.remove("visible");
 }
 
-function toggleCategory(index, button) {
+function toggleCategory(index, control) {
   const segment = donut?.querySelector(`[data-index="${index}"]`);
-  if (!segment) return;
-  const isSelected = button.getAttribute("aria-pressed") === "true";
-  button.setAttribute("aria-pressed", String(!isSelected));
-  button.classList.toggle("is-muted", !isSelected);
-  segment.classList.toggle("is-muted", !isSelected);
+  const button = legend?.querySelector(`[data-index="${index}"]`);
+  if (!segment || !button) return;
+  const muted = control.getAttribute("aria-pressed") === "true";
+  [segment, button].forEach((item) => {
+    item.setAttribute("aria-pressed", String(!muted));
+    item.classList.toggle("is-muted", muted);
+    item.setAttribute("aria-label", `${muted ? "Näita" : "Peida"} ${segment.dataset.label}, ${segment.dataset.value} vastust`);
+  });
 }
 
 function renderBars(targetId, entries, options = {}) {
@@ -185,40 +196,15 @@ const panelStage = document.getElementById("panel-stage");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let panelTransitionTimer;
 let panelTransitionEnd;
-let panelSkeletonTimer;
-let panelSkeleton;
-
-function clearPanelSkeleton() {
-  if (panelSkeletonTimer) window.clearTimeout(panelSkeletonTimer);
-  panelSkeletonTimer = undefined;
-  panelStage?.classList.remove("is-loading");
-  panels.forEach((panel) => panel.removeAttribute("aria-busy"));
-  panelSkeleton?.remove();
-  panelSkeleton = undefined;
-}
-
-function createPanelSkeleton() {
-  const skeleton = document.createElement("div");
-  skeleton.className = "panel-skeleton";
-  skeleton.setAttribute("aria-hidden", "true");
-  skeleton.innerHTML = `
-    <div class="panel-skeleton-head">
-      <i class="skeleton-line skeleton-kicker"></i>
-      <i class="skeleton-line skeleton-title"></i>
-      <i class="skeleton-line skeleton-copy"></i>
-    </div>
-    <div class="panel-skeleton-grid">
-      <div class="skeleton-card"><i class="skeleton-line skeleton-icon"></i><i class="skeleton-line skeleton-label"></i><i class="skeleton-line skeleton-chart"></i><i class="skeleton-line skeleton-copy"></i></div>
-      <div class="skeleton-card"><i class="skeleton-line skeleton-icon"></i><i class="skeleton-line skeleton-label"></i><i class="skeleton-line skeleton-chart short"></i><i class="skeleton-line skeleton-copy medium"></i></div>
-    </div>`;
-  return skeleton;
-}
+let panelTransitionResolve;
+let panelTransitionPromise = Promise.resolve(true);
+let surveyNavigationRun = 0;
 
 function activateTab(tab, focus = false) {
-  if (!tab) return;
+  if (!tab) return Promise.resolve(false);
   const nextPanel = document.getElementById(tab.getAttribute("aria-controls") || `panel-${tab.dataset.panel}`);
   const currentPanel = panels.find((panel) => panel.classList.contains("active"));
-  if (!nextPanel) return;
+  if (!nextPanel) return Promise.resolve(false);
 
   tabs.forEach((item) => {
     const selected = item === tab;
@@ -227,11 +213,15 @@ function activateTab(tab, focus = false) {
     item.tabIndex = selected ? 0 : -1;
   });
   if (focus) tab.focus();
-  if (currentPanel === nextPanel) return;
+  if (currentPanel === nextPanel) return panelTransitionPromise;
+  closeAllSurveyTips();
 
+  const startHeight = panelStage?.getBoundingClientRect().height || 0;
   if (panelTransitionTimer) window.clearTimeout(panelTransitionTimer);
   if (panelTransitionEnd) panelStage.removeEventListener("transitionend", panelTransitionEnd);
-  clearPanelSkeleton();
+  panelTransitionResolve?.(false);
+  panelTransitionResolve = null;
+  panels.forEach((panel) => panel.removeAttribute("aria-busy"));
   panels.forEach((panel) => panel.classList.remove("is-leaving"));
 
   if (!currentPanel || !panelStage || reducedMotion) {
@@ -242,15 +232,12 @@ function activateTab(tab, focus = false) {
     });
     panelStage?.classList.remove("is-animating");
     if (panelStage) panelStage.style.height = "";
-    return;
+    panelTransitionPromise = Promise.resolve(true);
+    return panelTransitionPromise;
   }
 
-  const startHeight = panelStage.getBoundingClientRect().height;
   panelStage.style.height = `${startHeight}px`;
   panelStage.classList.add("is-animating");
-  panelStage.classList.add("is-loading");
-  panelSkeleton = createPanelSkeleton();
-  panelStage.append(panelSkeleton);
   currentPanel.classList.remove("active");
   currentPanel.classList.add("is-leaving");
   currentPanel.setAttribute("aria-hidden", "true");
@@ -263,35 +250,40 @@ function activateTab(tab, focus = false) {
     panelStage.style.height = `${nextPanel.offsetHeight}px`;
   });
 
-  const finishTransition = () => {
-    panels.forEach((panel) => panel.classList.remove("is-leaving"));
-    panelStage.classList.remove("is-animating");
-    panelStage.style.height = "";
-    if (panelTransitionEnd) panelStage.removeEventListener("transitionend", panelTransitionEnd);
-    panelTransitionEnd = undefined;
-    if (panelTransitionTimer) window.clearTimeout(panelTransitionTimer);
-    panelTransitionTimer = undefined;
-  };
-  panelTransitionEnd = (event) => {
-    if (event.target === panelStage && event.propertyName === "height") finishTransition();
-  };
-  panelStage.addEventListener("transitionend", panelTransitionEnd);
-  panelTransitionTimer = window.setTimeout(finishTransition, 520);
-  panelSkeletonTimer = window.setTimeout(() => {
-    const skeleton = panelSkeleton;
-    panelStage.classList.remove("is-loading");
-    nextPanel.removeAttribute("aria-busy");
-    skeleton?.classList.add("is-hiding");
-    panelSkeletonTimer = window.setTimeout(() => {
-      skeleton?.remove();
-      if (panelSkeleton === skeleton) panelSkeleton = undefined;
-      panelSkeletonTimer = undefined;
-    }, 190);
-  }, 250);
+  const promise = new Promise((resolve) => {
+    const finishTransition = (completed = true) => {
+      if (panelTransitionResolve !== resolve) return;
+      panels.forEach((panel) => panel.classList.remove("is-leaving"));
+      nextPanel.removeAttribute("aria-busy");
+      panelStage.classList.remove("is-animating");
+      panelStage.style.height = "";
+      if (panelTransitionEnd) panelStage.removeEventListener("transitionend", panelTransitionEnd);
+      if (panelTransitionTimer) window.clearTimeout(panelTransitionTimer);
+      panelTransitionEnd = undefined;
+      panelTransitionTimer = undefined;
+      panelTransitionResolve = null;
+      panelTransitionPromise = Promise.resolve(true);
+      resolve(completed);
+    };
+    panelTransitionResolve = resolve;
+    panelTransitionEnd = (event) => {
+      if (event.target === panelStage && event.propertyName === "height") finishTransition();
+    };
+    panelStage.addEventListener("transitionend", panelTransitionEnd);
+    panelTransitionTimer = window.setTimeout(finishTransition, 480);
+  });
+  panelTransitionPromise = promise;
+  return promise;
 }
 
 tabs.forEach((tab, index) => {
-  tab.addEventListener("click", () => activateTab(tab));
+  tab.addEventListener("click", () => {
+    if (!tab.classList.contains("active")) {
+      surveyNavigationRun += 1;
+      closeAllSurveyTips();
+    }
+    activateTab(tab);
+  });
   tab.addEventListener("keydown", (event) => {
     let nextIndex = index;
     if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
@@ -300,10 +292,120 @@ tabs.forEach((tab, index) => {
     else if (event.key === "End") nextIndex = tabs.length - 1;
     else return;
     event.preventDefault();
+    surveyNavigationRun += 1;
+    closeAllSurveyTips();
     activateTab(tabs[nextIndex], true);
   });
 });
 if (tabs.length) activateTab(tabs.find((tab) => tab.classList.contains("active")) || tabs[0]);
+
+const surveyDestinations = new Map([
+  ["#tools-chart", { tabId: "tab-daily", targetId: "tools-chart", tipId: "tools-context-slot" }],
+  ["#schedule-chart", { tabId: "tab-schedule", targetId: "schedule-chart", tipId: "schedule-context-slot" }],
+  ["#channels-chart", { tabId: "tab-feedback", targetId: "channels-chart", tipId: "channels-context-slot" }],
+]);
+
+function closeSurveyTip(tip) {
+  if (!tip) return;
+  const target = tip.closest(".chart-card");
+  const restoreFocus = tip.contains(document.activeElement);
+  tip.dataset.open = "false";
+  tip.style.display = "none";
+  tip.setAttribute("aria-hidden", "true");
+  tip.inert = true;
+  const descriptionId = tip.querySelector(".survey-context-tooltip")?.id || tip.id;
+  if (target?.getAttribute("aria-describedby") === descriptionId) {
+    target.removeAttribute("aria-describedby");
+  }
+  if (restoreFocus) target?.focus({ preventScroll: true });
+}
+
+function closeAllSurveyTips() {
+  document.querySelectorAll(".survey-context-slot[data-open='true']").forEach(closeSurveyTip);
+}
+
+document.querySelectorAll(".survey-context-slot").forEach((tip) => {
+  tip.querySelector("button")?.addEventListener("click", () => closeSurveyTip(tip));
+});
+
+function finishAfterSurveyScroll(run, callback) {
+  let settled = false;
+  let idleTimer;
+  let maxTimer;
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(idleTimer);
+    window.clearTimeout(maxTimer);
+    window.removeEventListener("scroll", onScroll);
+    if (run === surveyNavigationRun) callback();
+  };
+  const onScroll = () => {
+    window.clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(finish, 120);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  idleTimer = window.setTimeout(finish, 160);
+  maxTimer = window.setTimeout(finish, 1800);
+}
+
+function navigateToSurveyDestination(hash, updateHistory = true) {
+  const destination = surveyDestinations.get(hash);
+  if (!destination) return false;
+  const target = document.getElementById(destination.targetId);
+  const tab = document.getElementById(destination.tabId);
+  const tip = destination.tipId ? document.getElementById(destination.tipId) : null;
+  if (!target || !tab || (destination.tipId && !tip)) return false;
+
+  const run = ++surveyNavigationRun;
+  closeAllSurveyTips();
+  if (updateHistory) {
+    const url = `${window.location.pathname}${window.location.search}${hash}`;
+    if (window.location.hash === hash) window.history.replaceState(null, "", url);
+    else window.history.pushState(null, "", url);
+  }
+
+  const transition = activateTab(tab);
+  transition.then((completed) => {
+    if (!completed && run === surveyNavigationRun) surveyNavigationRun += 1;
+  });
+  requestAnimationFrame(() => {
+    if (run !== surveyNavigationRun) return;
+    if (!target.hasAttribute("tabindex")) target.tabIndex = -1;
+    target.focus({ preventScroll: true });
+    const headerHeight = document.querySelector(".site-header")?.getBoundingClientRect().height || 0;
+    const targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight - 14;
+    window.scrollTo({ top: Math.max(0, targetTop), behavior: reducedMotion ? "auto" : "smooth" });
+    finishAfterSurveyScroll(run, () => {
+      if (!tip) return;
+      target.setAttribute("aria-describedby", tip.querySelector(".survey-context-tooltip")?.id || tip.id);
+      tip.inert = false;
+      tip.setAttribute("aria-hidden", "false");
+      tip.style.display = "block";
+      tip.dataset.open = "true";
+    });
+  });
+  return true;
+}
+
+document.querySelectorAll("a[data-survey-link]").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    if (navigateToSurveyDestination(link.getAttribute("href"))) event.preventDefault();
+  });
+});
+
+window.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  document.querySelectorAll(".survey-context-slot[data-open='true']").forEach(closeSurveyTip);
+});
+
+window.addEventListener("hashchange", () => {
+  if (!navigateToSurveyDestination(window.location.hash, false)) closeAllSurveyTips();
+});
+
+if (surveyDestinations.has(window.location.hash)) {
+  navigateToSurveyDestination(window.location.hash, false);
+}
 
 const animatedCharts = [...document.querySelectorAll(".horizontal-chart")];
 if ("IntersectionObserver" in window) {

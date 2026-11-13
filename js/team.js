@@ -139,16 +139,10 @@ function closeContribution() {
   });
 }
 
-document.querySelectorAll(".member-card[data-member]").forEach((card) => {
-  card.addEventListener("click", (event) => {
-    event.preventDefault();
-    openContribution(card.dataset.member, card);
-  });
-  card.addEventListener("keydown", (event) => {
-    if (event.code === "Space") {
-      event.preventDefault();
-      openContribution(card.dataset.member, card);
-    }
+document.querySelectorAll("[data-member]").forEach((trigger) => {
+  trigger.addEventListener("click", (event) => {
+    if (trigger instanceof HTMLAnchorElement) event.preventDefault();
+    openContribution(trigger.dataset.member, trigger);
   });
 });
 

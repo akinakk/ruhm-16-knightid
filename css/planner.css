@@ -41,6 +41,20 @@
   background: transparent;
 }
 
+.planner-stat > b {
+  display: flex;
+  min-height: 24px;
+  align-items: center;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.planner-stat-label {
+  display: block;
+  min-height: 16px;
+  line-height: 1.35;
+}
+
 .planner-mark {
   border-color: rgba(255, 255, 255, .16);
   border-radius: 11px;
@@ -146,7 +160,10 @@
 .planner-day-button[aria-pressed="true"] .planner-day-date { color: #c7bcdf; }
 
 .planner-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   min-height: 56px;
+  height: 70px;
   gap: 0;
   padding: 12px 25px 13px;
   border-bottom: 1px solid rgba(255, 255, 255, .08);
@@ -280,7 +297,26 @@
 
 .planner-subhead { margin-bottom: 13px; }
 .planner-subhead h4 { font-size: 18px; }
-.planner-events { min-height: 0; overflow: hidden; }
+.planner-day-content {
+  min-height: 248px;
+  transform: translate3d(0, 0, 0);
+}
+.planner-day-content.is-changing {
+  animation: planner-day-change 230ms var(--ease-out) both;
+}
+@keyframes planner-day-change {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.planner-events { position: relative; min-height: 0; overflow: hidden; }
+
+.planner-events-exit-layer {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+}
+.planner-events-exit-item { position: absolute !important; margin: 0 !important; }
 .planner-event { grid-template-columns: 56px 12px minmax(0, 1fr); gap: 11px; }
 
 .planner-event-rail::before {
@@ -313,6 +349,45 @@
 .planner-room { margin-top: 6px; color: #a1a1aa; }
 .planner-course-code { color: #a1a1aa; }
 .planner-event-header { min-height: 20px; }
+
+/* Keep the timeline layered and tactile without changing its measured height. */
+.planner-event {
+  position: relative;
+  isolation: isolate;
+}
+.planner-event-card {
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-left: 2px solid color-mix(in srgb, var(--course-accent) 72%, transparent);
+  border-radius: 14px;
+  background:
+    linear-gradient(105deg, color-mix(in srgb, var(--course-accent) 10%, #111319), rgba(255, 255, 255, .018) 68%),
+    rgba(255, 255, 255, .018);
+  box-shadow: inset 0 1px rgba(255, 255, 255, .045);
+  transition: opacity 220ms var(--ease-out), border-color 220ms var(--ease-out), background-color 220ms var(--ease-out);
+}
+.planner-event-card::after {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: -2px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--course-accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--course-accent) 38%, transparent);
+  content: "";
+  opacity: .8;
+}
+.planner-gap {
+  contain: layout paint;
+  will-change: transform, opacity;
+}
+.planner-gap-line {
+  height: 24px;
+  min-height: 24px;
+  align-self: center;
+}
 
 .planner-event-status {
   display: inline-flex;
